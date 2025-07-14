@@ -210,4 +210,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Database File
-db.json
+bot.db

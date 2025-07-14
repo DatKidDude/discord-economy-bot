@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import sqlite3
 import logging
 from dotenv import load_dotenv
 import os
@@ -24,9 +25,12 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    await member.send(f"Welcome to the server {member.name}")
-    
 
+    for channel in member.guild.text_channels:
+        if str(channel) == "general":
+            await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
+            
+            
 # Ensure TOKEN is always a string to satisfy bot.run(),
 # since os.getenv() can return None if the env variable is missing.
 # Providing a default None string avoids linter/type checker warnings.
