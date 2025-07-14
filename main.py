@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from database import Database
 import sqlite3
 import logging
 from dotenv import load_dotenv
@@ -7,6 +8,8 @@ import os
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN", "None")
+
+db = Database()
 
 handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
 intents = discord.Intents.default()
@@ -25,6 +28,15 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
+
+    users = db.get_users()
+    # check if user is already in the database
+    for user in users:
+        if user[0] == member.id:
+            print(f"{member.id} already exists")
+            return
+    
+    db.add_user(member.id)
 
     for channel in member.guild.text_channels:
         if str(channel) == "general":

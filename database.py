@@ -15,8 +15,8 @@ class Database:
                 cursor = conn.cursor()
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS users (
-                        discord_id TEXT PRIMARY KEY,
-                        currency INT NOT NULL
+                        discord_id INTEGER PRIMARY KEY,
+                        currency INTEGER NOT NULL
                     ); """
                 )
 
@@ -30,13 +30,16 @@ class Database:
     def add_user(self, discord_id, currency=1000):
         """Adds a user and their starting currency to the database"""
         with self._connect() as conn:
-            c = conn.cursor()
-            c.execute("INSERT OR IGNORE INTO users (discord_id, currency) VALUES (?, ?)", (discord_id, currency))
+            cursor = conn.cursor()
+            cursor.execute("INSERT OR IGNORE INTO users (discord_id, currency) VALUES (?, ?)", (discord_id, currency))
             conn.commit()
     
-    def remove_user(self):
+    def remove_user(self, discord_id: int):
         """Removes the user from the database"""
-        pass
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"DELETE FROM users WHERE discord_id = ?", (discord_id,))
+            conn.commit()
     
     def update_currency(self):
         """Adds or subtracts currency from the user"""
@@ -49,4 +52,14 @@ class Database:
             cursor.execute("SELECT * FROM users")
             rows = cursor.fetchall()
             return rows
+    
+    def remove_table(self):
+        """Only used for development"""
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"DROP TABLE users")
+            conn.commit()
 
+if __name__ == "__main__":
+    db = Database()
+     
