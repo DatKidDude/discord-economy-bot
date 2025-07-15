@@ -23,7 +23,6 @@ class Database:
                 # commit the changes
                 conn.commit()
 
-                print("Tables created successfully.")
         except sqlite3.OperationalError as e:
             print(f"Failed to create table: {e}")
     
@@ -34,16 +33,19 @@ class Database:
             cursor.execute("INSERT OR IGNORE INTO users (discord_id, currency) VALUES (?, ?)", (discord_id, currency))
             conn.commit()
     
-    def remove_user(self, discord_id: int):
+    def remove_user(self, discord_id):
         """Removes the user from the database"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(f"DELETE FROM users WHERE discord_id = ?", (discord_id,))
             conn.commit()
     
-    def update_currency(self):
+    def update_currency(self, discord_id, amount):
         """Adds or subtracts currency from the user"""
-        pass
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET currency = currency + ? WHERE discord_id = ?", (amount, discord_id))
+            conn.commit()
     
     def get_users(self):
         """Displays all the users and their currency in the database"""

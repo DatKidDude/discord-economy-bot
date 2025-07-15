@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from database import Database
-import sqlite3
+from random import choice
 import logging
 from dotenv import load_dotenv
 import os
@@ -41,6 +41,34 @@ async def on_member_join(member):
     for channel in member.guild.text_channels:
         if str(channel) == "general":
             await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
+
+
+@bot.command()
+async def work(ctx):
+    jobs = {
+        "cleaned porta potties": 100,
+        "commentatated for derby": 600,
+        "won a derby": 1000,
+        "sold merchandise": 300,
+        "worked pit crew": 500,
+        "watered the track": 100,
+        "worked the food stand": 200,
+        "worked the entrance": 600,
+        "worked security detail": 400,
+        "cleaned the cars": 700
+    }
+
+    user = ctx.author
+    job, amount = choice(list(jobs.items()))
+
+    try:
+        db.update_currency(discord_id=user.id, amount=amount)
+    except Exception as e:
+        print(f"Error updating currency: {e}")
+        await ctx.send("Something went wrong while working. Please try again.")
+    else:   
+        await ctx.send(f"{user} {job}: ${amount}")
+
             
             
 # Ensure TOKEN is always a string to satisfy bot.run(),

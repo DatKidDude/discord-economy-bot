@@ -211,3 +211,6 @@ __marimo__/
 
 # Database File
 bot.db
+
+# test script
+test.py
