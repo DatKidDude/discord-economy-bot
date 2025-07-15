@@ -41,11 +41,19 @@ class Database:
             conn.commit()
     
     def update_currency(self, discord_id, amount):
-        """Adds or subtracts currency from the user"""
+        """Updates the user's currency"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET currency = currency + ? WHERE discord_id = ?", (amount, discord_id))
             conn.commit()
+    
+    def get_currency(self, discord_id):
+        """Returns the user's currency"""
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT currency FROM users WHERE discord_id = ?", (discord_id,))
+            return cursor.fetchone()[0]
+            
     
     def get_users(self):
         """Displays all the users and their currency in the database"""
@@ -64,4 +72,3 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-     

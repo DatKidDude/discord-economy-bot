@@ -69,7 +69,17 @@ async def work(ctx):
     else:   
         await ctx.send(f"{user} {job}: ${amount}")
 
-            
+
+@bot.command()
+async def currency(ctx):
+    user = ctx.author 
+    try:
+        amount = db.get_currency(discord_id=user.id)
+    except Exception as e:
+        print(f"Error retrieving currency from user: {e}")
+        await ctx.send("Something went wrong while retrieving currency. Please try again.")
+    else:
+        await ctx.send(f"{user.mention} has ${amount}")
             
 # Ensure TOKEN is always a string to satisfy bot.run(),
 # since os.getenv() can return None if the env variable is missing.
