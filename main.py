@@ -29,7 +29,7 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
 
-    users = db.get_users()
+    users = db.get_all_users()
     # check if user is already in the database
     for user in users:
         if user[0] == member.id:

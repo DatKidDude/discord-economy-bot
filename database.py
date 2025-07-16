@@ -54,14 +54,21 @@ class Database:
             cursor.execute("SELECT currency FROM users WHERE discord_id = ?", (discord_id,))
             return cursor.fetchone()[0]
             
-    
-    def get_users(self):
+    def get_all_users(self):
         """Displays all the users and their currency in the database"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users")
             rows = cursor.fetchall()
             return rows
+    
+    def get_user(self, discord_id):
+        """Returns a user from the database"""
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE discord_id = ?", (discord_id,))
+            row = cursor.fetchone()
+            return row
     
     def remove_table(self):
         """Only used for development"""
