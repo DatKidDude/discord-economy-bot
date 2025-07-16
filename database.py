@@ -1,4 +1,15 @@
 import sqlite3
+from datetime import datetime, timedelta
+
+def adapt_datetime_iso(val):
+    return val.replace(tzinfo=None).isoformat()
+
+sqlite3.register_adapter(datetime, adapt_datetime_iso)
+
+def convert_datetime(val):
+    return datetime.fromisoformat(val.decode())
+
+sqlite3.register_converter("datetime", convert_datetime)
 
 class Database:
     
@@ -16,7 +27,8 @@ class Database:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS users (
                         discord_id INTEGER PRIMARY KEY,
-                        currency INTEGER NOT NULL
+                        currency INTEGER NOT NULL,
+                        event_time datetime DEFAULT NULL
                     ); """
                 )
 
