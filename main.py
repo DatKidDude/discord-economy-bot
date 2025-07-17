@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from database import Database
 from random import choice
+from datetime import datetime, timezone, timedelta
 import logging
 from dotenv import load_dotenv
 import os
@@ -59,22 +60,38 @@ async def work(ctx):
     }
 
     user = ctx.author
-    job, amount = choice(list(jobs.items()))
+    user_id = user.id
+    
+    _, _, cooldown_time_utc = db.get_user(user_id)
 
-    try:
-        db.update_currency(discord_id=user.id, amount=amount)
-    except Exception as e:
-        print(f"Error updating currency: {e}")
-        await ctx.send("Something went wrong while working. Please try again.")
-    else:   
-        await ctx.send(f"{user} {job}: ${amount}")
+    current_time_utc = datetime.now(timezone.utc)
+
+    # The default database `event_time` value is NULL 
+    # User is only allowed to run the command every 24 hours
+    if cooldown_time_utc is None or current_time_utc >= cooldown_time_utc:
+        job, amount = choice(list(jobs.items()))
+        try:
+            tomorrow_utc = datetime.now(timezone.utc) + timedelta(hours=24)
+            db.update_currency(discord_id=user.id, currency=amount, event_time=tomorrow_utc)
+        except Exception as e:
+            print(f"Error updating currency: {e}")
+            await ctx.send("Something went wrong while working. Please try again.")
+        else:   
+            await ctx.send(f"{user} {job}: ${amount}")
+    else:
+        cooldown = cooldown_time_utc - current_time_utc # returns a timedelta object
+        hour = cooldown.seconds // 3600   
+        minutes = (cooldown.seconds // 60) % 60
+        await ctx.send(f"{user.mention} must wait {hour}:{minutes} before working again")
 
 
 @bot.command()
 async def currency(ctx):
     user = ctx.author 
+    user_id = user.id
+
     try:
-        amount = db.get_currency(discord_id=user.id)
+        amount = db.get_currency(discord_id=user_id)
     except Exception as e:
         print(f"Error retrieving currency from user: {e}")
         await ctx.send("Something went wrong while retrieving currency. Please try again.")

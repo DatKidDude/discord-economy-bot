@@ -1,8 +1,8 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 
 def adapt_datetime_iso(val):
-    return val.replace(tzinfo=None).isoformat()
+    return val.replace(tzinfo=timezone.utc).isoformat()
 
 sqlite3.register_adapter(datetime, adapt_datetime_iso)
 
@@ -18,7 +18,7 @@ class Database:
         self._init_db()
 
     def _connect(self):
-        return sqlite3.connect(self.db_path)
+        return sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
     
     def _init_db(self):
         try:
@@ -52,11 +52,11 @@ class Database:
             cursor.execute(f"DELETE FROM users WHERE discord_id = ?", (discord_id,))
             conn.commit()
     
-    def update_currency(self, discord_id, amount):
+    def update_currency(self, discord_id, currency, event_time):
         """Updates the user's currency"""
         with self._connect() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET currency = currency + ? WHERE discord_id = ?", (amount, discord_id))
+            cursor.execute("UPDATE users SET currency = currency + ?, event_time = ? WHERE discord_id = ?", (currency, event_time, discord_id))
             conn.commit()
     
     def get_currency(self, discord_id):
