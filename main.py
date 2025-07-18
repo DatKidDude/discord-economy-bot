@@ -19,6 +19,14 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+@bot.command()
+async def remove(ctx): # Only used for development
+    """Deletes all messages in a channel"""
+    user = ctx.author
+
+    deleted = await ctx.channel.purge(limit=1000) 
+    await ctx.send(f"Deleted {len(deleted)} messages")
+
 @bot.event
 async def on_ready():
     if bot.user:
@@ -42,7 +50,6 @@ async def on_member_join(member):
     for channel in member.guild.text_channels:
         if str(channel) == "general":
             await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
-
 
 @bot.command()
 async def work(ctx):
@@ -82,7 +89,7 @@ async def work(ctx):
         cooldown = cooldown_time_utc - current_time_utc # returns a timedelta object
         hour = cooldown.seconds // 3600   
         minutes = (cooldown.seconds // 60) % 60
-        await ctx.send(f"{user.mention} must wait {hour}:{minutes} before working again")
+        await ctx.send(f"{user.mention} must wait {hour}:{minutes:02} before working again")
 
 
 @bot.command()
