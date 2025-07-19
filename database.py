@@ -82,6 +82,14 @@ class Database:
             row = cursor.fetchone()
             return row
     
+    def check_user_exists(self, discord_id):
+        """Returns 1 if the user exists"""
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM users WHERE discord_id = ?", (discord_id,))
+            row = cursor.fetchone()[0]
+            return row
+    
     def remove_table(self):
         """Only used for development"""
         with self._connect() as conn:

@@ -19,17 +19,23 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-def user_exists(user_id):
-    """Returns True if the user exists in the database
-    else returns False"""
-    users = db.get_all_users()
+class MustBeRegistered(commands.CheckFailure): pass
+class MustNotBeRegistered(commands.CheckFailure): pass
 
-    for user in users:
-        if user[0] == user_id:
-            return True 
-        
-    return False
-    
+def user_exists(should_be_registered=True):
+    """Decorator function to check if a user is registered inside the database"""
+    async def predicate(ctx):
+        user_id = ctx.author.id
+
+        is_registered = db.check_user_exists(discord_id=user_id)
+        if should_be_registered and not is_registered:
+            raise MustBeRegistered("User is not registered")
+        if not should_be_registered and is_registered:
+            raise MustNotBeRegistered("User is already registered")
+        return True
+
+    return commands.check(predicate)
+
 
 @bot.command()
 async def remove(ctx): # Only used for development
@@ -47,14 +53,11 @@ async def on_ready():
         print("Something went wrong went starting up the bot")
 
 @bot.command()
+@user_exists(should_be_registered=False)
 async def join(ctx):
     """Adds the user to the database"""
     user = ctx.author 
     user_id = user.id
-
-    if (user_exists(user_id=user_id)):
-        await ctx.send(f"{user.mention} is already active")
-        return
     
     try:
         db.add_user(user_id)
@@ -62,25 +65,10 @@ async def join(ctx):
         print(f"Error occurred while adding user to database: {e}")
     else:
         await ctx.send(f"{user.mention} has been awarded $1000 for joining beamconomy!")
- 
 
-# @bot.event
-# async def on_member_join(member):
-
-#     users = db.get_all_users()
-#     # check if user is already in the database
-#     for user in users:
-#         if user[0] == member.id:
-#             print(f"{member.id} already exists")
-#             return
-    
-#     db.add_user(member.id)
-
-#     for channel in member.guild.text_channels:
-#         if str(channel) == "general":
-#             await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
 
 @bot.command()
+@user_exists(should_be_registered=True)
 async def work(ctx):
     jobs = {
         "cleaned porta potties": 100,
@@ -122,6 +110,7 @@ async def work(ctx):
 
 
 @bot.command()
+@user_exists(should_be_registered=True)
 async def currency(ctx):
     user = ctx.author 
     user_id = user.id
@@ -133,7 +122,14 @@ async def currency(ctx):
         await ctx.send("Something went wrong while retrieving currency. Please try again.")
     else:
         await ctx.send(f"{user.mention} has ${amount}")
-            
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, MustBeRegistered):
+        await ctx.send(f"{ctx.author.mention} is not registered. Use !join")
+    elif isinstance(error, MustNotBeRegistered):
+        await ctx.send(f"{ctx.author.mention} is already registered")
+
 # Ensure TOKEN is always a string to satisfy bot.run(),
 # since os.getenv() can return None if the env variable is missing.
 # Providing a default None string avoids linter/type checker warnings.
