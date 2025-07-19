@@ -19,6 +19,18 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+def user_exists(user_id):
+    """Returns True if the user exists in the database
+    else returns False"""
+    users = db.get_all_users()
+
+    for user in users:
+        if user[0] == user_id:
+            return True 
+        
+    return False
+    
+
 @bot.command()
 async def remove(ctx): # Only used for development
     """Deletes all messages in a channel"""
@@ -34,22 +46,39 @@ async def on_ready():
     else:
         print("Something went wrong went starting up the bot")
 
+@bot.command()
+async def join(ctx):
+    """Adds the user to the database"""
+    user = ctx.author 
+    user_id = user.id
 
-@bot.event
-async def on_member_join(member):
-
-    users = db.get_all_users()
-    # check if user is already in the database
-    for user in users:
-        if user[0] == member.id:
-            print(f"{member.id} already exists")
-            return
+    if (user_exists(user_id=user_id)):
+        await ctx.send(f"{user.mention} is already active")
+        return
     
-    db.add_user(member.id)
+    try:
+        db.add_user(user_id)
+    except Exception as e:
+        print(f"Error occurred while adding user to database: {e}")
+    else:
+        await ctx.send(f"{user.mention} has been awarded $1000 for joining beamconomy!")
+ 
 
-    for channel in member.guild.text_channels:
-        if str(channel) == "general":
-            await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
+# @bot.event
+# async def on_member_join(member):
+
+#     users = db.get_all_users()
+#     # check if user is already in the database
+#     for user in users:
+#         if user[0] == member.id:
+#             print(f"{member.id} already exists")
+#             return
+    
+#     db.add_user(member.id)
+
+#     for channel in member.guild.text_channels:
+#         if str(channel) == "general":
+#             await channel.send(f"{member.mention} has been awarded $1000 for joining beamconomy!")
 
 @bot.command()
 async def work(ctx):
